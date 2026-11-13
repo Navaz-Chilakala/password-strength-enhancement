@@ -1,24 +1,29 @@
-<html>
-    <head>
-        <title>dashboard</title>
-        <style>
-            *{
-                color:maroon;
-                font-size:xx-large;
-                margin:auto;
-                text-align: center;
-            }
-            a{
-                height:30px;
-                width:60px;
-                
-            }
-        </style>
-    </head>
-    <body>
-        Welcome <%= name %>!<br>
-        You have successfully logged in
-        <a href="/home">logOut</a>
-    </body>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<header class="site-header">
+    <div class="inner">
+        <a class="brand" href="/">Password Strength Enhancement</a>
+        <span class="header-note"><%= name %></span>
+    </div>
+</header>
+<main class="shell single">
+    <section class="card status">
+        <h1>Signed in</h1>
+        <p>Your email and colour-coded password were accepted.</p>
+        <ul class="meta">
+            <li><span>Username</span><span><%= name %></span></li>
+            <li><span>Password check</span><span>Characters and colours matched</span></li>
+        </ul>
+        <a class="btn ghost" href="/home">Log out</a>
+    </section>
+</main>
+</body>
 </html>

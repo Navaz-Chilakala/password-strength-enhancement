@@ -1,72 +1,127 @@
-<!--<!DOCTYPE html>
-<html lang="en" >
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>project</title>
-  <link rel="stylesheet" href="./style.css">
-  <script type="text/javascript" src="i.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Password Strength Enhancement</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css">
 </head>
-<body>-->
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>project</title>
-        <link rel="stylesheet" href="./css/style.css">
-        <link rel="stylesheet" type="text/css" href="slide navbar style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap" rel="stylesheet">
-    </head>
-    <body>
-    <div id="mydiv">
-      <div id="mydivheader">Click here to move</div>
-      <div id="divButton">
-      <button class="button" id="red" onclick="changeColor(this)">red</button>
-      <button class="button" id="green" onclick="changeColor(this)">green</button>
-      <button class="button" id="blue" onclick="changeColor(this)">blue</button>
-      <button class="button" id="yellow" onclick="changeColor(this)">yellow</button>
-      <button class="button" id="magenta" onclick="changeColor(this)">pink</button>
-      <button class="button" id="orange" onclick="changeColor(this)">orange</button>
-      <button class="button" id="cyan" onclick="changeColor(this)">cyan</button>
-      <button class="button" id="purple" onclick="changeColor(this)">purple</button>
-      <button class="button" id="brown" onclick="changeColor(this)">brown</button>
+<body>
+<header class="site-header">
+    <div class="inner">
+        <a class="brand" href="/">Password Strength Enhancement</a>
+        <span class="header-note">Prototype</span>
     </div>
-    </div>
-        <div class="main">  	
-            <input type="checkbox" id="chk" aria-hidden="true">
-                <div class="signup">
-                    <form method="post"  action="/register" onsubmit="submitForm()">
-                        <!--action="land.html"-->
-                        <label for="chk" aria-hidden="true" id="sign">Sign up</label>
-                        <input type="text" name="userName" placeholder="User name" id="username" required="" onblur="validateUsername()">
-                        <span class="sp" id="usererror" style="display:none">username should be 6-15 length</span>
-                        <input type="email" name="email" placeholder="Email" required="" id="email" onblur="validateEmail()">
-                        <span class="sp" id="emailerror" style="display:none">enter valid email address</span>
-                        <input type="password" name="pswd" placeholder="Password" required="" id="password" class="pswd" onblur="validatePassword()" onselect="selectedRange()">
-                        <button class="button button1" onclick="showText()" type="button">show</button>
-                        <div style="display:none;" id="show"></div>
-                        <span style="display:none" class="sp" id="passerror">invalid password</span>
-                        <button type="submit">SignUp</button>
-                    </form>
-                </div>
-    
-                <div class="login">
-                    <form method="post" action="/login">
-                        <label for="chk" aria-hidden="true">Login</label>
-                        <input type="email" name="email" placeholder="Email" required="">
-                        <input type="password" name="pswd" placeholder="Password" required="" class="pswd" onselect="selectedRange1()">
-                        <div style="display:none" id="show1"></div>
-                        <button class="button button1" onclick="showText1()" type="button">show</button>
-                        <button type="submit" onclick="submitForm1()">Login</button><br>
+</header>
+<main class="shell" data-initial="<%= locals.tab || 'signup' %>">
 
-                    </form>
-                </div>
+    <section class="intro">
+        <h1>Colour your password to make it harder to guess</h1>
+        <p class="lead">Choose a password, then assign a colour to any of its characters. The server stores each character together with its colour, so the same letters in a different colour pattern are a different password.</p>
+
+        <h2>How it works</h2>
+        <div class="how">
+            <div class="item"><h3>Choose a password</h3><p>Use at least six characters with upper case, lower case, a digit and one of @ $ ! % * ? &amp;.</p></div>
+            <div class="item"><h3>Colour characters</h3><p>Select characters, then pick a colour from the palette. Characters you leave uncoloured count as having no colour.</p></div>
+            <div class="item"><h3>Repeat it at login</h3><p>Enter the same password and apply the same colours. A correct password with the wrong colours is rejected.</p></div>
         </div>
-        <script type="text/javascript" src="./css/validation.js"></script>
-        <script type="text/javascript" src="./move.js"></script>
-        <script type="text/javascript" src="./css/password.js"></script>
-        
-    </body>
-    </html>
-    <!--</body>
-       
-    </html>-->
-    
+
+        <div class="spec-wrap">
+            <table class="spec">
+                <caption>Estimated strength of <code>Abc12@x</code> (7 characters, 72-symbol pool)</caption>
+                <tbody>
+                    <tr><th scope="row">No colours</th><td>43 bits</td></tr>
+                    <tr><th scope="row">3 characters coloured</th><td>53 bits</td></tr>
+                    <tr><th scope="row">All 7 characters coloured</th><td>65 bits</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="spec-note">Estimate: log2 of the symbol pool for each character, plus log2(9) bits for each coloured character, because an attacker must also guess one of nine colours.</p>
+    </section>
+
+    <section class="card" aria-label="Account">
+        <% if (locals.error) { %>
+            <div class="alert" role="alert"><%= error %></div>
+        <% } %>
+
+        <div class="tabs" role="tablist">
+            <button class="tab" role="tab" type="button" data-tab="signup" aria-selected="true">Sign up</button>
+            <button class="tab" role="tab" type="button" data-tab="login" aria-selected="false">Log in</button>
+        </div>
+
+        <!-- Sign up -->
+        <div class="panel" data-panel="signup">
+            <h2>Create an account</h2>
+            <p class="sub">The colours you choose are part of your password. You need them to log in.</p>
+            <form class="auth-form" data-mode="signup" method="post" action="/register" novalidate>
+                <div class="field" data-field="username">
+                    <label for="su-user">Username</label>
+                    <input type="text" id="su-user" name="userName" placeholder="6-15 letters, numbers or _ @ # +" autocomplete="username" required>
+                    <div class="hint-err">Username must be 6-15 characters (letters, numbers, _ @ # +).</div>
+                </div>
+                <div class="field" data-field="email">
+                    <label for="su-email">Email</label>
+                    <input type="email" id="su-email" name="email" placeholder="you@example.com" autocomplete="email" required>
+                    <div class="hint-err">Enter a valid email address.</div>
+                </div>
+                <div class="field" data-field="password">
+                    <label for="su-pw">Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="su-pw" data-pw autocomplete="new-password" placeholder="Create a password">
+                        <button type="button" class="link-btn" data-toggle>Show</button>
+                    </div>
+                    <input type="hidden" name="pswd" data-encoded>
+                    <div class="hint-err">Use at least 6 characters with upper case, lower case, a digit and one of @ $ ! % * ? &amp;.</div>
+
+                    <%- include('partials/colorbox') %>
+
+                    <div class="meter">
+                        <div class="meter-bar"><div class="meter-fill" data-meter-fill></div></div>
+                        <div class="meter-row">
+                            <span>Strength: <span class="meter-label" data-meter-label>—</span></span>
+                            <span class="bonus" data-meter-bonus></span>
+                        </div>
+                    </div>
+                    <ul class="rules">
+                        <li data-rule="len">6+ characters</li>
+                        <li data-rule="lower">Lower case</li>
+                        <li data-rule="upper">Upper case</li>
+                        <li data-rule="digit">A digit</li>
+                        <li data-rule="special">@ $ ! % * ? &amp;</li>
+                    </ul>
+                </div>
+                <button type="submit" class="btn">Create account</button>
+            </form>
+        </div>
+
+        <!-- Log in -->
+        <div class="panel" data-panel="login" hidden>
+            <h2>Log in</h2>
+            <p class="sub">Enter your password and apply the same colours you chose when you signed up.</p>
+            <form class="auth-form" data-mode="login" method="post" action="/login">
+                <div class="field">
+                    <label for="li-email">Email</label>
+                    <input type="email" id="li-email" name="email" placeholder="you@example.com" autocomplete="email" required>
+                </div>
+                <div class="field">
+                    <label for="li-pw">Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="li-pw" data-pw autocomplete="current-password" placeholder="Your password" required>
+                        <button type="button" class="link-btn" data-toggle>Show</button>
+                    </div>
+                    <input type="hidden" name="pswd" data-encoded>
+                    <%- include('partials/colorbox') %>
+                </div>
+                <button type="submit" class="btn">Log in</button>
+            </form>
+        </div>
+    </section>
+
+</main>
+<footer class="site-footer">Prototype. Do not use a password you use elsewhere.</footer>
+<script src="/js/auth.js"></script>
+</body>
+</html>
