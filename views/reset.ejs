@@ -34,6 +34,7 @@
                     <form method="post"  action="/reset" onsubmit="submitForm()">
                         <h1>Reset Password</h1>
                         <label><%= userEmail %></label>
+                        <input type="hidden" name="token" value="<%= token %>">
                         <input type="password" placeholder="password" class="password" name="password" onblur="validatePassword(0)" onselect="selectedRange(0)">
                         <button class="button button1" type="button" onclick="showText('show',0)" type="button">show</button>
                         <span class="sp" id="passerror0" style="display:none">enter valid email address</span>

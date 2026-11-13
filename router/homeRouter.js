@@ -1,11 +1,10 @@
 const express=require('express');
 const Router=express.Router();
-const homeSchema=require('../models/homeSchema');
-const bcrypt=require('bcryptjs');
-const path=require('path');
-var nodemailer=require('nodemailer');
-var resetEmail="";
-Router.get('/',(err,res)=>{
+const crypto=require('crypto');
+const nodemailer=require('nodemailer');
+const {query}=require('../db');
+
+Router.get('/',(req,res)=>{
     res.render('register',{b2b:'hello1'});
 })
 Router.get('/homepage',(req,res)=>{
@@ -17,128 +16,84 @@ Router.get('/forgot',(req,res)=>{
 Router.get('/home',(req,res)=>{
     res.render('register');
 })
-Router.get('/reset',(req,res)=>{
-    res.render('reset',{userEmail:resetEmail});
+Router.get('/reset',async(req,res)=>{
+    try{
+        const r=await query('SELECT email FROM users WHERE resetToken=? AND resetExpires>?',[req.query.token||'',Date.now()]);
+        if(!r.rows.length) return res.send('reset link is invalid or expired');
+        res.render('reset',{userEmail:r.rows[0].email,token:req.query.token});
+    }catch(e){
+        res.send('cannot connect');
+    }
 })
 
 Router.post('/register',async(req,res)=>{
     try{
-        var password=req.body.pswd;
-        const user=req.body.userName;
-        const email=req.body.email; 
-        console.log(password);
-        bcrypt.hash(password,8,(err,hashedPassword)=>{
-            if(err){
-                return err;
-            }
-            password=hashedPassword;
-            const userData=new homeSchema({
-                userName:user,
-                email:email,
-                pswd:password          
-            });
-            userData.save(err=>{
-                if(err){
-                    res.send("username or email already exists");
-                }else{
-                    res.render('land',{link:"register.ejs"});
-                }
-            });
-        })
-
-        
+        const {userName,email,pswd}=req.body;
+        await query('INSERT INTO users (userName,email,pswd) VALUES (?,?,?)',[userName,email,pswd]);
+        res.render('land',{link:"register.ejs"});
     }catch(error){
-        res.send("cannot connect");
+        if(/UNIQUE/i.test(String(error.message))){
+            res.send("username or email already exists");
+        }else{
+            res.send("cannot connect");
+        }
     }
-
 })
-
 
 //log in
-
-Router.post('/login',(req,res)=>
-{
-    const email=req.body.email;
-    const password=req.body.pswd;
-    console.log(password);
-    homeSchema.findOne({email:email}).then(function(user){
-        if(!user){
-            throw new err('no use with that email');
+Router.post('/login',async(req,res)=>{
+    try{
+        const {email,pswd}=req.body;
+        const r=await query('SELECT userName,pswd FROM users WHERE email=?',[email]);
+        if(!r.rows.length) return res.send("enter correct email");
+        const user=r.rows[0];
+        if(pswd==user.pswd){
+            res.render('dashboard',{name:user.userName});
+        }else{
+            res.send('enter correct password');
         }
-        bcrypt.compare(password,user.pswd).then(validPass=>{
-            if(validPass)
-            {
-                res.render('dashboard',{name:user.userName});
-            }
-            else{
-                res.send('enter correct password');
-            }
-        }).catch(err=>res.send('error'+err));
-    }).catch(function(err){
-        res.send("enter correct email");
-    })
+    }catch(e){
+        res.send("cannot connect");
+    }
 })
+
 //forgot password
-Router.post('/forgot',(req,res)=>{
-    const email=req.body.email;
-    homeSchema.findOne({email:email}).then(function(user){
-        if(!user){
-            throw new err('no user with that email');
-        }
-        resetEmail=email;
-        var transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: 'rguktcse62@gmail.com',
-              pass: 'irairbmjqodhnrox'
-            }
-          });
-          
-          var mailOptions = {
-            from: 'rguktcse62@gmail.com',
+Router.post('/forgot',async(req,res)=>{
+    try{
+        const email=req.body.email;
+        const r=await query('SELECT id FROM users WHERE email=?',[email]);
+        if(!r.rows.length) return res.send("This email has not been registered");
+
+        const token=crypto.randomBytes(24).toString('hex');
+        await query('UPDATE users SET resetToken=?,resetExpires=? WHERE email=?',[token,Date.now()+3600*1000,email]);
+
+        const base=process.env.BASE_URL||`${req.protocol}://${req.get('host')}`;
+        const transporter=nodemailer.createTransport({
+            service:'gmail',
+            auth:{user:process.env.MAIL_USER,pass:process.env.MAIL_PASS}
+        });
+        await transporter.sendMail({
+            from:process.env.MAIL_USER,
             to:email,
-            subject: 'Sending Email using Node.js',
-            text: "<a href='http://localhost:8080/reset'>click here</a>"
-          };
-          
-          transporter.sendMail(mailOptions, function(error, info){
-            if (error) {
-              console.log(error);
-            } else {
-              res.send('check your mail');
-              console.log('Email sent: ' + info.response);
-            }
-          });
-    }).catch(function(err){
-        res.send("This email has not been registered");
-    })
+            subject:'Reset your password',
+            html:`<a href='${base}/reset?token=${token}'>click here</a>`
+        });
+        res.send('check your mail');
+    }catch(e){
+        console.log(e);
+        res.send('could not send mail');
+    }
 })
 
-Router.post('/reset', (req,res)=>{
-    const pass=req.body.password;
-    homeSchema.findOne({email:resetEmail},function(err,data){
-		console.log(data);
-		if(!data){
-			res.send({"Success":"This Email Is not regestered!"});
-		}else{
-                bcrypt.hash(pass,8,(err,hashedPassword)=>{
-                    if(err){
-                        return err;
-                    }
-			        data.pswd=hashedPassword;
-			        data.save(function(err, Person){
-				        if(err)
-					        console.log(err);
-				        else{
-					        console.log('Success');
-                            res.render('resetSuccess',{link:"register.ejs"});
-                        }
-			        });
-                })
-		}
-	}).clone().catch(function(err){
-        res.send(err);
-    })
+Router.post('/reset',async(req,res)=>{
+    try{
+        const {password,token}=req.body;
+        const r=await query('UPDATE users SET pswd=?,resetToken=NULL,resetExpires=NULL WHERE resetToken=? AND resetExpires>?',[password,token||'',Date.now()]);
+        if(!r.rowsAffected) return res.send({"Success":"Reset link is invalid or expired!"});
+        res.render('resetSuccess',{link:"register.ejs"});
+    }catch(e){
+        res.send('cannot connect');
+    }
 })
 
 module.exports=Router;
