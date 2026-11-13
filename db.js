@@ -25,9 +25,7 @@ function init() {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 userName TEXT NOT NULL UNIQUE,
                 email TEXT NOT NULL UNIQUE,
-                pswd TEXT NOT NULL,
-                resetToken TEXT,
-                resetExpires INTEGER
+                pswd TEXT NOT NULL
             )`
         ], 'write').catch(e => { ready = undefined; throw e; });
     }
