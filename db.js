@@ -6,11 +6,11 @@ let db;
 function getClient() {
     if (!db) {
         const url = process.env.TURSO_DATABASE_URL;
-        if (!url && process.env.VERCEL) {
-            throw new Error('TURSO_DATABASE_URL is not set');
-        }
+        // Vercel's only writable folder is /tmp (ephemeral: data resets on cold start).
+        // Set TURSO_DATABASE_URL for data that persists.
+        const fallback = process.env.VERCEL ? 'file:/tmp/local.db' : 'file:local.db';
         db = createClient({
-            url: url || 'file:local.db',
+            url: url || fallback,
             authToken: process.env.TURSO_AUTH_TOKEN
         });
     }
