@@ -3,27 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/app.css">
+    <title>Your account, <%= name %></title>
+    <%- include('partials/acct-head') %>
 </head>
 <body>
-<header class="site-header">
-    <div class="inner">
-        <a class="brand" href="/">Password Strength Enhancement</a>
-        <span class="header-note"><%= name %></span>
+<%
+    var plain = pw.length - pw.colouredCount;
+    var gain = Math.round(plain * 3.17);
+    var names = Object.keys(pw.counts).sort(function(a, b){ return pw.counts[b] - pw.counts[a]; });
+    var pct1 = pw.total ? Math.round(pw.base / pw.total * 100) : 100;
+%>
+<header class="bar">
+    <div class="wrap">
+        <a class="mark" href="/">
+            <span class="mark-dots" aria-hidden="true"><i style="background:var(--c-red)"></i><i style="background:var(--c-yellow)"></i><i style="background:var(--c-blue)"></i><i style="background:var(--c-green)"></i><i style="background:var(--c-purple)"></i><i style="background:var(--c-pink)"></i></span>
+            Password Strength Enhancement
+        </a>
+        <div class="who"><span><%= email %></span><a href="/home">Log out</a></div>
     </div>
 </header>
-<main class="shell single">
-    <section class="card status">
-        <h1>Signed in</h1>
-        <p>Your email and colour-coded password were accepted.</p>
-        <ul class="meta">
-            <li><span>Username</span><span><%= name %></span></li>
-            <li><span>Password check</span><span>Characters and colours matched</span></li>
-        </ul>
-        <a class="btn ghost" href="/home">Log out</a>
+
+<main class="wrap">
+    <section class="top">
+        <div>
+            <h1>You're in, <%= name %>.</h1>
+            <p>Your email and colours both matched. Here is how your password holds up.</p>
+        </div>
+        <div>
+            <%- include('partials/strip', {pw: pw}) %>
+            <p class="strip-cap"><%= pw.length %> characters, <%= pw.colouredCount %> coloured<%= plain ? ', ' + plain + ' plain' : '' %>.</p>
+        </div>
     </section>
+
+    <section class="block">
+        <div>
+            <h2>Strength</h2>
+            <p class="why">An estimate of the guesses needed, in bits. Each extra bit doubles the work.</p>
+        </div>
+        <div>
+            <div class="score"><strong><%= pw.total %></strong><span>bits, rated <em><%= pw.rating %></em></span></div>
+            <div class="bar-split" role="img" aria-label="<%= pw.base %> bits from characters, <%= pw.bonus %> bits from colour"><i class="b1" style="width:<%= pct1 %>%"></i><i class="b2" style="width:<%= 100 - pct1 %>%"></i></div>
+            <ul class="legend">
+                <li><b><%= pw.base %></b> bits from characters</li>
+                <li><b>+<%= pw.bonus %></b> bits from colour</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="block">
+        <div>
+            <h2>Colours in use</h2>
+            <p class="why">How your colours are spread across the password.</p>
+        </div>
+        <ul class="rows">
+            <% names.forEach(function(c){ %>
+            <li>
+                <span class="dot c-<%= c %>"></span>
+                <span class="name"><%= c.charAt(0).toUpperCase() + c.slice(1) %></span>
+                <span class="track" aria-hidden="true"><i style="width:<%= Math.round(pw.counts[c] / pw.length * 100) %>%"></i></span>
+                <span class="num"><%= pw.counts[c] %></span>
+            </li>
+            <% }) %>
+            <% if (plain) { %>
+            <li>
+                <span class="dot none"></span>
+                <span class="name">No colour</span>
+                <span class="track" aria-hidden="true"><i style="width:<%= Math.round(plain / pw.length * 100) %>%"></i></span>
+                <span class="num"><%= plain %></span>
+            </li>
+            <% } %>
+            <% if (!names.length) { %><li><span class="name">No characters are coloured yet.</span></li><% } %>
+        </ul>
+    </section>
+
+    <section class="block">
+        <div>
+            <h2>What to improve</h2>
+            <p class="why">Suggestions based on this password, nothing generic.</p>
+        </div>
+        <ol class="notes">
+            <% if (plain) { %>
+            <li>
+                <h3>Colour the <%= plain %> plain character<%= plain === 1 ? '' : 's' %></h3>
+                <p>That would add about <%= gain %> bits. Remember the new colours before you change anything.</p>
+            </li>
+            <% } else { %>
+            <li>
+                <h3>Every character is coloured</h3>
+                <p>You have used all the colour strength this scheme offers. More length is the next lever.</p>
+            </li>
+            <% } %>
+            <% if (pw.length < 12) { %>
+            <li>
+                <h3>Add characters</h3>
+                <p>You have <%= pw.length %>. Reaching 12 makes the base much harder to guess, and each new character can carry a colour too.</p>
+            </li>
+            <% } else { %>
+            <li>
+                <h3>Length is good</h3>
+                <p>At <%= pw.length %> characters the base is already solid.</p>
+            </li>
+            <% } %>
+            <li>
+                <h3>Keep the pattern somewhere private</h3>
+                <p>If you forget which character was which colour, the right letters will not be enough to log in.</p>
+            </li>
+        </ol>
+    </section>
+
+    <section class="block">
+        <div>
+            <h2>Account</h2>
+        </div>
+        <dl class="facts">
+            <dt>Username</dt><dd><%= name %></dd>
+            <dt>Email</dt><dd><%= email %></dd>
+            <dt>Password</dt><dd><%= pw.length %> characters, <%= pw.colouredCount %> coloured</dd>
+        </dl>
+    </section>
+
+    <footer class="foot">Prototype. Strength figures are rough estimates, not a guarantee.</footer>
 </main>
 </body>
 </html>

@@ -1,0 +1,3 @@
+<ul class="strip" aria-label="Your password: <%= pw.length %> characters, <%= pw.colouredCount %> coloured">
+    <% pw.colours.forEach(function(c, i){ %><li class="<%= c==='none' ? 'none' : 'c-'+c %>" style="--n:<%= i %>" title="Character <%= i+1 %>: <%= c==='none' ? 'no colour' : c %>"></li><% }) %>
+</ul>

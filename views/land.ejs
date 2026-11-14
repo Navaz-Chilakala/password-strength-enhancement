@@ -3,23 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Account created</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/app.css">
+    <title>Welcome, <%= name %></title>
+    <%- include('partials/acct-head') %>
 </head>
 <body>
-<header class="site-header">
-    <div class="inner">
-        <a class="brand" href="/">Password Strength Enhancement</a>
-        <span class="header-note">Prototype</span>
+<header class="bar">
+    <div class="wrap">
+        <a class="mark" href="/">
+            <span class="mark-dots" aria-hidden="true"><i style="background:var(--c-red)"></i><i style="background:var(--c-yellow)"></i><i style="background:var(--c-blue)"></i><i style="background:var(--c-green)"></i><i style="background:var(--c-purple)"></i><i style="background:var(--c-pink)"></i></span>
+            Password Strength Enhancement
+        </a>
+        <div class="who"><span><%= email %></span></div>
     </div>
 </header>
-<main class="shell single">
-    <section class="card status">
-        <h1>Account created</h1>
-        <p>Your account is ready. Log in with your email and your colour-coded password.</p>
-        <a class="btn" href="/homepage">Go to log in</a>
+
+<main class="wrap">
+    <section class="top">
+        <div>
+            <h1>Welcome, <%= name %>. Your account is ready.</h1>
+            <p>Your password is saved with its colours, so it is harder to guess than the same letters in plain text. This is its shape.</p>
+        </div>
+        <div>
+            <%- include('partials/strip', {pw: pw}) %>
+            <p class="strip-cap"><%= pw.length %> characters, <%= pw.colouredCount %> coloured. Dashed circles have no colour.</p>
+        </div>
     </section>
+
+    <section class="block">
+        <div>
+            <h2>Before you log in</h2>
+            <p class="why">Three things to remember about a colour password.</p>
+        </div>
+        <ol class="notes">
+            <li>
+                <h3>Type the same characters</h3>
+                <p>Enter your email, then your password exactly as you chose it.</p>
+            </li>
+            <li>
+                <h3>Paint the same colours</h3>
+                <p>Select the same characters and apply the same colours. The right letters with the wrong colours will not log you in.</p>
+            </li>
+            <li>
+                <h3>Take a picture of the pattern</h3>
+                <p>The colours are easy to forget if you only remember the word. Write down which characters were which colour, somewhere private.</p>
+            </li>
+        </ol>
+    </section>
+
+    <section class="block">
+        <div>
+            <h2>Your strength estimate</h2>
+            <p class="why">Colour adds guesses an attacker has to make, on top of the characters.</p>
+        </div>
+        <div>
+            <div class="score"><strong><%= pw.total %></strong><span>bits, rated <em><%= pw.rating %></em></span></div>
+            <% var pct1 = pw.total ? Math.round(pw.base / pw.total * 100) : 100; %>
+            <div class="bar-split" role="img" aria-label="<%= pw.base %> bits from characters, <%= pw.bonus %> bits from colour"><i class="b1" style="width:<%= pct1 %>%"></i><i class="b2" style="width:<%= 100 - pct1 %>%"></i></div>
+            <ul class="legend">
+                <li><b><%= pw.base %></b> bits from characters</li>
+                <li><b>+<%= pw.bonus %></b> bits from colour</li>
+            </ul>
+            <a class="go" href="/homepage">Log in</a>
+        </div>
+    </section>
+
+    <footer class="foot">Prototype. Strength figures are rough estimates, not a guarantee.</footer>
 </main>
 </body>
 </html>
