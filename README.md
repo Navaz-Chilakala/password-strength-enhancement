@@ -2,6 +2,8 @@
 
 Express + EJS registration/login app backed by SQLite (libSQL / Turso), deployable on Vercel.
 
+**Live demo:** https://password-strength-enhancement.vercel.app/
+
 ## Run locally
 ```bash
 npm install
