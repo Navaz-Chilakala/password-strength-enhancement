@@ -1,6 +1,10 @@
 const express=require('express');
 const Router=express.Router();
 const {query}=require('../db');
+const bcrypt=require('bcryptjs');
+
+const ROUNDS=10;
+const isHash=v=>/^\$2[aby]\$\d{2}\$/.test(String(v||''));
 
 const COLOURS=['red','orange','yellow','green','cyan','blue','purple','pink','brown'];
 
@@ -51,7 +55,9 @@ Router.get('/home',(req,res)=>{
 Router.post('/register',async(req,res)=>{
     try{
         const {userName,email,pswd}=req.body;
-        await query('INSERT INTO users (userName,email,pswd) VALUES (?,?,?)',[userName,email,pswd]);
+        // Hash the full "char:colour" string, so the colours are part of the secret.
+        const hash=await bcrypt.hash(String(pswd||''),ROUNDS);
+        await query('INSERT INTO users (userName,email,pswd) VALUES (?,?,?)',[userName,email,hash]);
         res.render('land',{name:userName,email,pw:summarise(pswd)});
     }catch(error){
         if(/UNIQUE/i.test(String(error.message))){
@@ -69,8 +75,18 @@ Router.post('/login',async(req,res)=>{
         const r=await query('SELECT userName,email,pswd FROM users WHERE email=?',[email]);
         if(!r.rows.length) return res.status(401).render('register',{tab:'login',error:'No account found for that email.'});
         const user=r.rows[0];
-        if(pswd==user.pswd){
-            res.render('dashboard',{name:user.userName,email:user.email,pw:summarise(user.pswd)});
+        const stored=String(user.pswd||'');
+        let ok=false;
+        if(isHash(stored)){
+            ok=await bcrypt.compare(String(pswd||''),stored);
+        }else if(pswd===stored){
+            // Account made before hashing: accept once, then replace the plain value with a hash.
+            ok=true;
+            await query('UPDATE users SET pswd=? WHERE email=?',[await bcrypt.hash(stored,ROUNDS),email]);
+        }
+        if(ok){
+            // The summary is built from the password just typed; the database only holds the hash.
+            res.render('dashboard',{name:user.userName,email:user.email,pw:summarise(pswd)});
         }else{
             res.status(401).render('register',{tab:'login',error:'Wrong password. Colours count too: colour the same characters the same way you did at sign up.'});
         }
